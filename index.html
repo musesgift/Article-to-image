@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长文章转图片工具 - 多图连载版</title>
+    <title>长文章转图片工具 - 完美出版级</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
@@ -41,22 +41,23 @@
             font-size: 14px;
             font-weight: 500;
         }
-        input[type="range"] {
-            cursor: pointer;
-            width: 90px;
+        input[type="range"] { cursor: pointer; width: 80px; }
+        input[type="number"] { width: 45px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        input[type="color"] { cursor: pointer; width: 32px; height: 32px; border: none; border-radius: 4px; padding: 0; background: none; }
+        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; cursor: pointer; }
+        
+        .text-input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        input[type="number"] {
-            width: 50px;
-            padding: 4px 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-align: center;
-        }
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
+        .text-input:focus { border-color: #2563eb; }
 
         .editor-container {
             border: 1px solid #ccc;
@@ -71,25 +72,29 @@
             padding: 10px 15px;
             border-bottom: 1px solid #ccc;
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .tool-btn {
             background: white;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
-            padding: 6px 12px;
+            padding: 6px 10px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #333;
             transition: background 0.2s;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
         }
-        .tool-btn:hover {
-            background: #e2e8f0;
-        }
+        .tool-btn:hover { background: #e2e8f0; }
+        .toolbar-divider { width: 1px; background-color: #cbd5e1; margin: 0 5px; }
+        
         #textInput {
             width: 100%;
-            height: 300px;
+            height: 250px;
             padding: 15px;
             font-size: 16px;
             overflow-y: auto;
@@ -97,10 +102,7 @@
             outline: none;
             line-height: 1.6;
         }
-        #textInput:empty:before {
-            content: attr(data-placeholder);
-            color: #94a3b8;
-        }
+        #textInput:empty:before { content: attr(data-placeholder); color: #94a3b8; }
 
         .primary-btn {
             padding: 16px 24px;
@@ -118,9 +120,7 @@
             align-items: center;
             gap: 10px;
         }
-        .primary-btn:hover {
-            background-color: #1d4ed8;
-        }
+        .primary-btn:hover { background-color: #1d4ed8; }
 
         #preview-container {
             display: flex;
@@ -129,32 +129,104 @@
             width: 100%;
         }
 
-        /* 提取出通用的排版类名，方便后台切分时复用样式 */
         .preview-box {
             width: 400px; 
             max-width: 100%;
             
-            --font-size: 12px;
-            --p-spacing: 10px;
+            --font-family: system-ui, -apple-system, sans-serif;
+            --title-font-size: 20px;
+            --font-size: 13px;  /* 默认字号 13px */
+            --p-spacing: 5px;   
             --p-indent: 0em;
-            --margin-x: 40px; 
+            --margin-y: 50px; 
+            --margin-x: 40px;   /* 默认左右边距 40px */
+            --bg-color: #ffffff;
+            --text-color: #333333;
             
-            background: white;
-            padding: 40px var(--margin-x); 
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: var(--margin-y) var(--margin-x); 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             min-height: 100px;
             box-sizing: border-box;
-            
             font-size: var(--font-size);
-            color: #333;
+            transition: background-color 0.3s, color 0.3s;
         }
         
-        .preview-box p {
+        .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
             word-wrap: break-word;
             text-align: justify; 
+        }
+
+        .preview-box [style*="text-align: center"],
+        .preview-box [style*="text-align: right"],
+        .preview-box [align="center"],
+        .preview-box [align="right"] {
+            text-indent: 0 !important;
+        }
+        
+        .preview-box h1 {
+            font-size: var(--title-font-size);
+            font-weight: 800;
+            line-height: 1.4;
+            margin: 0 0 8px 0;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .preview-box h2#preview-subtitle {
+            font-size: calc(var(--title-font-size) * 0.65);
+            font-weight: normal;
+            line-height: 1.5;
+            margin: 0 0 12px 0;
+            text-align: center;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .preview-box .author-byline {
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.6;
+            margin: 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .preview-box .header-img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 0 0 15px 0;
+            display: block;
+        }
+
+        .preview-box .header-note {
+            font-size: calc(var(--font-size) * 0.95);
+            color: var(--text-color);
+            opacity: 0.75;
+            border-left: 3px solid var(--text-color);
+            padding-left: 12px;
+            margin: 20px 0 0 0;
+            line-height: 1.6;
+            text-align: justify;
+            text-indent: 0 !important; /* 强制取消题注的缩进 */
+        }
+
+        .preview-box .footer-note {
+            font-size: calc(var(--font-size) * 0.9);
+            color: var(--text-color);
+            opacity: 0.6;
+            border-top: 1px dashed var(--text-color);
+            padding-top: 20px;
+            margin: 40px 0 0 0;
+            line-height: 1.6;
+            text-align: justify;
+            text-indent: 0 !important; /* 强制取消尾注的缩进 */
         }
 
     </style>
@@ -164,22 +236,43 @@
     <div class="panel">
         <h2>1. 排版设置</h2>
         <div class="settings-group">
+            <div class="setting-item" style="width: 100%;">
+                <label for="fontFamily" style="font-weight: bold;">全文字体:</label>
+                <select id="fontFamily">
+                    <option value="system-ui, -apple-system, 'PingFang SC', sans-serif">系统黑体</option>
+                    <option value="'Songti SC', 'STSong', 'SimSun', serif">宋体</option>
+                    <option value="'Kaiti SC', 'STKaiti', 'KaiTi', serif">楷体</option>
+                </select>
+            </div>
+
             <div class="setting-item">
-                <label for="fontSize">字号:</label>
-                <input type="range" id="fontSize" min="10" max="24" value="12">
-                <span id="fontSizeVal" style="width: 35px;">12px</span>
+                <label for="titleFontSize">标题字号:</label>
+                <input type="range" id="titleFontSize" min="16" max="48" value="20">
+                <span id="titleFontSizeVal" style="width: 35px;">20px</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="fontSize">正文字号:</label>
+                <input type="range" id="fontSize" min="10" max="24" value="13">
+                <span id="fontSizeVal" style="width: 35px;">13px</span>
             </div>
             
             <div class="setting-item">
                 <label for="paraSpacing">段距:</label>
-                <input type="range" id="paraSpacing" min="0" max="40" value="10">
-                <span id="paraSpacingVal" style="width: 35px;">10px</span>
+                <input type="range" id="paraSpacing" min="0" max="40" value="5">
+                <span id="paraSpacingVal" style="width: 35px;">5px</span>
             </div>
 
             <div class="setting-item">
-                <label for="pageMargin">页边距:</label>
+                <label for="pageMargin">左右边距:</label>
                 <input type="range" id="pageMargin" min="10" max="60" value="40">
                 <span id="pageMarginVal" style="width: 35px;">40px</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="pageYMargin">上下边距:</label>
+                <input type="range" id="pageYMargin" min="20" max="120" value="50">
+                <span id="pageYMarginVal" style="width: 35px;">50px</span>
             </div>
 
             <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px;">
@@ -188,49 +281,201 @@
             </div>
             
             <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px; background: #eef2ff; padding: 5px 15px; border-radius: 6px;">
-                <label for="imageCount" style="color: #4338ca; font-weight: bold;">生成图片张数:</label>
+                <label for="imageCount" style="color: #4338ca; font-weight: bold;">生成张数:</label>
                 <input type="number" id="imageCount" min="1" max="10" value="1">
+            </div>
+
+            <div class="setting-item" style="width: 100%; border-top: 1px solid #eee; padding-top: 15px; margin-top: 5px;">
+                <label style="font-weight: bold; margin-right: 10px;">配色主题:</label>
+                <button class="tool-btn" id="themeDay" style="background: #ffffff; color: #333; border: 1px solid #ccc;">☀️ 日间</button>
+                <button class="tool-btn" id="themeNight" style="background: #1f2937; color: #f3f4f6; border: 1px solid #111827;">🌙 夜间</button>
+                <button class="tool-btn" id="themeParchment" style="background: #fdf6e3; color: #4a4036; border: 1px solid #e2d1b3;">📜 羊皮纸</button>
+                
+                <div class="toolbar-divider" style="height: 20px; margin: 0 15px;"></div>
+                
+                <label for="bgColor" style="font-size: 13px;">自定义底色:</label>
+                <input type="color" id="bgColor" value="#ffffff" title="更改背景颜色">
+                
+                <label for="textColor" style="font-size: 13px; margin-left: 10px;">文字颜色:</label>
+                <input type="color" id="textColor" value="#333333" title="更改文字颜色">
             </div>
         </div>
 
-        <h2>2. 编辑内容</h2>
+        <h2>2. 文章头部 (选填)</h2>
+        <div class="settings-group" style="flex-direction: column; align-items: stretch; gap: 12px;">
+            <div style="display: flex; gap: 10px;">
+                <label for="headerImgUpload" class="tool-btn" style="flex: 1; border-color: #2563eb; color: #2563eb;">📸 选择版头图片</label>
+                <input type="file" id="headerImgUpload" accept="image/*" style="display: none;">
+                <button id="removeImgBtn" class="tool-btn" style="display: none; background: #fee2e2; color: #ef4444; border-color: #fca5a5;">🗑️ 移除</button>
+            </div>
+            <input type="text" id="inputTitle" class="text-input" placeholder="输入文章大标题..." style="font-weight: bold;">
+            <input type="text" id="inputSubtitle" class="text-input" placeholder="输入副标题...">
+            <input type="text" id="inputAuthor" class="text-input" placeholder="输入作者署名...">
+            <textarea id="inputHeaderNote" class="text-input" placeholder="输入题注 (如：名言引语、文章出处等)" style="height: 60px; resize: none;"></textarea>
+        </div>
+
+        <h2>3. 编辑正文内容</h2>
         <div class="editor-container">
             <div class="toolbar">
                 <button class="tool-btn" onclick="formatDoc('bold')" title="加粗"><b>B</b></button>
                 <button class="tool-btn" onclick="formatDoc('italic')" title="斜体"><i>I</i></button>
                 <button class="tool-btn" onclick="formatDoc('underline')" title="下划线"><u>U</u></button>
                 <button class="tool-btn" onclick="formatDoc('strikeThrough')" title="删除线"><s>S</s></button>
+                <div class="toolbar-divider"></div>
+                <button class="tool-btn" onclick="formatDoc('justifyLeft')" title="居左">居左</button>
+                <button class="tool-btn" onclick="formatDoc('justifyCenter')" title="居中">居中</button>
+                <button class="tool-btn" onclick="formatDoc('justifyRight')" title="居右">居右</button>
             </div>
-            <div id="textInput" contenteditable="true" data-placeholder="在此输入文章，粘贴纯文本会自动排版..."></div>
+            <div id="textInput" contenteditable="true" data-placeholder="在此粘贴或输入文章正文，可选中部分文字单独设置格式和对齐..."></div>
+        </div>
+
+        <h2>4. 文章尾部 (选填)</h2>
+        <div class="settings-group" style="flex-direction: column; align-items: stretch; gap: 12px;">
+            <textarea id="inputFooterNote" class="text-input" placeholder="输入尾注 (如：版权声明、参考资料、作者寄语等)" style="height: 60px; resize: none;"></textarea>
         </div>
         
         <button class="primary-btn" onclick="generateAndShare()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-            3. 智能排版并保存到相册
+            5. 智能排版并保存到相册
         </button>
     </div>
 
     <div class="panel" id="preview-panel">
-        <h2>预览效果 (仅显示连载总览)</h2>
+        <h2>排版预览</h2>
         <div id="preview-container">
-            <div id="article-preview" class="preview-box"></div>
+            <div id="article-preview" class="preview-box">
+                <div id="preview-header-section">
+                    <img id="preview-header-img" class="header-img" style="display: none;">
+                    <h1 id="preview-title" style="display: none;"></h1>
+                    <h2 id="preview-subtitle" style="display: none;"></h2>
+                    <div id="preview-author" class="author-byline" style="display: none;"></div>
+                    <div id="preview-header-note" class="header-note" style="display: none;"></div>
+                </div>
+                <div id="preview-content-section"></div>
+                <div id="preview-footer-note" class="footer-note" style="display: none;"></div>
+            </div>
         </div>
     </div>
 
     <script>
         const textInput = document.getElementById('textInput');
         const preview = document.getElementById('article-preview');
+        const contentSection = document.getElementById('preview-content-section');
         const rootStyles = preview.style;
 
+        const fontFamilySelect = document.getElementById('fontFamily');
+        const titleFontSizeInput = document.getElementById('titleFontSize');
+        const titleFontSizeVal = document.getElementById('titleFontSizeVal');
         const fontSizeInput = document.getElementById('fontSize');
         const fontSizeVal = document.getElementById('fontSizeVal');
         const paraSpacingInput = document.getElementById('paraSpacing');
         const paraSpacingVal = document.getElementById('paraSpacingVal');
         const pageMarginInput = document.getElementById('pageMargin');
         const pageMarginVal = document.getElementById('pageMarginVal');
+        const pageYMarginInput = document.getElementById('pageYMargin');
+        const pageYMarginVal = document.getElementById('pageYMarginVal');
         const textIndentInput = document.getElementById('textIndent');
 
+        const bgColorInput = document.getElementById('bgColor');
+        const textColorInput = document.getElementById('textColor');
+        const themeDayBtn = document.getElementById('themeDay');
+        const themeNightBtn = document.getElementById('themeNight');
+        const themeParchmentBtn = document.getElementById('themeParchment');
+
+        const inputTitle = document.getElementById('inputTitle');
+        const inputSubtitle = document.getElementById('inputSubtitle');
+        const inputAuthor = document.getElementById('inputAuthor');
+        const inputHeaderNote = document.getElementById('inputHeaderNote');
+        const inputFooterNote = document.getElementById('inputFooterNote');
+        const headerImgUpload = document.getElementById('headerImgUpload');
+        const removeImgBtn = document.getElementById('removeImgBtn');
+        
+        const previewTitle = document.getElementById('preview-title');
+        const previewSubtitle = document.getElementById('preview-subtitle');
+        const previewAuthor = document.getElementById('preview-author');
+        const previewHeaderNote = document.getElementById('preview-header-note');
+        const previewFooterNote = document.getElementById('preview-footer-note');
+        const previewHeaderImg = document.getElementById('preview-header-img');
+
         document.execCommand('defaultParagraphSeparator', false, 'p');
+
+        fontFamilySelect.addEventListener('change', (e) => {
+            rootStyles.setProperty('--font-family', e.target.value);
+        });
+
+        titleFontSizeInput.addEventListener('input', (e) => {
+            rootStyles.setProperty('--title-font-size', e.target.value + 'px');
+            titleFontSizeVal.textContent = e.target.value + 'px';
+        });
+
+        function updateThemeColors(bg, text) {
+            rootStyles.setProperty('--bg-color', bg);
+            rootStyles.setProperty('--text-color', text);
+            bgColorInput.value = bg;
+            textColorInput.value = text;
+        }
+
+        bgColorInput.addEventListener('input', (e) => updateThemeColors(e.target.value, textColorInput.value));
+        textColorInput.addEventListener('input', (e) => updateThemeColors(bgColorInput.value, e.target.value));
+
+        themeDayBtn.addEventListener('click', () => updateThemeColors('#ffffff', '#333333'));
+        themeNightBtn.addEventListener('click', () => updateThemeColors('#1a1a1a', '#e5e5e5'));
+        themeParchmentBtn.addEventListener('click', () => updateThemeColors('#fdf6e3', '#4a4036'));
+
+        function updateHeaderSpacing() {
+            previewHeaderImg.style.marginBottom = '15px';
+            previewTitle.style.marginBottom = '8px';
+            previewSubtitle.style.marginBottom = '12px';
+            previewAuthor.style.marginBottom = '0px'; 
+            previewHeaderNote.style.marginBottom = '0px'; 
+
+            let lastVisible = null;
+            if (previewHeaderImg.style.display !== 'none') lastVisible = previewHeaderImg;
+            if (previewTitle.style.display !== 'none') lastVisible = previewTitle;
+            if (previewSubtitle.style.display !== 'none') lastVisible = previewSubtitle;
+            if (previewAuthor.style.display !== 'none') lastVisible = previewAuthor;
+            if (previewHeaderNote.style.display !== 'none') lastVisible = previewHeaderNote;
+
+            if (lastVisible) {
+                lastVisible.style.marginBottom = '45px'; 
+            }
+        }
+
+        const bindTextSync = (inputEl, previewEl) => {
+            inputEl.addEventListener('input', () => {
+                previewEl.innerHTML = inputEl.value.replace(/\n/g, '<br>');
+                previewEl.style.display = inputEl.value.trim() ? 'block' : 'none';
+                if(inputEl !== inputFooterNote) updateHeaderSpacing();
+            });
+        };
+
+        bindTextSync(inputTitle, previewTitle);
+        bindTextSync(inputSubtitle, previewSubtitle);
+        bindTextSync(inputAuthor, previewAuthor);
+        bindTextSync(inputHeaderNote, previewHeaderNote);
+        bindTextSync(inputFooterNote, previewFooterNote);
+
+        headerImgUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewHeaderImg.src = evt.target.result;
+                    previewHeaderImg.style.display = 'block';
+                    removeImgBtn.style.display = 'inline-flex';
+                    updateHeaderSpacing();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeImgBtn.addEventListener('click', () => {
+            previewHeaderImg.src = '';
+            previewHeaderImg.style.display = 'none';
+            headerImgUpload.value = ''; 
+            removeImgBtn.style.display = 'none';
+            updateHeaderSpacing();
+        });
 
         function formatDoc(cmd) {
             document.execCommand(cmd, false, null);
@@ -251,10 +496,10 @@
         function syncPreview() {
             const content = textInput.innerHTML;
             if (!textInput.textContent.trim() && !content.includes('img')) {
-                preview.innerHTML = '<div style="color: #999; text-align: center; margin-top: 50px;">在此输入文章...</div>';
+                contentSection.innerHTML = '<div style="color: #999; text-align: center; margin-top: 50px;">正文内容将显示在这里...</div>';
                 return;
             }
-            preview.innerHTML = content;
+            contentSection.innerHTML = content;
         }
 
         textInput.addEventListener('input', syncPreview);
@@ -275,52 +520,70 @@
             pageMarginVal.textContent = e.target.value + 'px';
         });
 
+        pageYMarginInput.addEventListener('input', (e) => {
+            rootStyles.setProperty('--margin-y', e.target.value + 'px');
+            pageYMarginVal.textContent = e.target.value + 'px';
+        });
+
         textIndentInput.addEventListener('change', (e) => {
             rootStyles.setProperty('--p-indent', e.target.checked ? '2em' : '0em');
         });
 
-        // 核心：处理单图和多图生成的逻辑
         async function generateAndShare() {
             if (!textInput.textContent.trim()) {
-                alert('请先输入一些文字内容！');
+                alert('请至少输入一些正文内容！');
                 return;
             }
             
             const splitCount = parseInt(document.getElementById('imageCount').value) || 1;
-            const paragraphs = Array.from(preview.children);
             
-            if (splitCount > 1 && paragraphs.length < splitCount) {
-                alert('文章的段落数量比你要切分的图片张数还少！请按回车多增加几个段落，或者减少切分数量。');
+            const elementsToProcess = [];
+            if (previewHeaderImg.style.display !== 'none') elementsToProcess.push(previewHeaderImg);
+            if (previewTitle.style.display !== 'none') elementsToProcess.push(previewTitle);
+            if (previewSubtitle.style.display !== 'none') elementsToProcess.push(previewSubtitle);
+            if (previewAuthor.style.display !== 'none') elementsToProcess.push(previewAuthor);
+            if (previewHeaderNote.style.display !== 'none') elementsToProcess.push(previewHeaderNote);
+            
+            Array.from(contentSection.children).forEach(el => {
+                if(el.textContent.trim() || el.querySelector('img')) {
+                    elementsToProcess.push(el);
+                }
+            });
+
+            if (previewFooterNote.style.display !== 'none') elementsToProcess.push(previewFooterNote);
+            
+            if (splitCount > 1 && elementsToProcess.length < splitCount) {
+                alert('文章的内容块数量比你要切分的图片张数还少！无法均匀切分。');
                 return;
             }
 
             const btn = document.querySelector('.primary-btn');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '正在智能切分并排版，请稍候...';
+            btn.innerHTML = '正在处理高清排版...';
             btn.style.backgroundColor = '#9ca3af'; 
+            
+            const currentBgColor = rootStyles.getPropertyValue('--bg-color').trim() || '#ffffff';
             
             try {
                 let filesToShare = [];
                 let fallbackImages = [];
 
                 if (splitCount === 1) {
-                    // 单图模式
-                    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: "#ffffff" });
+                    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: currentBgColor });
                     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                     filesToShare.push(new File([blob], "排版长图.png", { type: "image/png" }));
                     fallbackImages.push(canvas.toDataURL('image/png'));
                 } else {
-                    // 多图智能切分模式
                     const tempContainer = document.createElement('div');
                     tempContainer.style.position = 'absolute';
                     tempContainer.style.left = '-9999px';
                     tempContainer.style.top = '0';
                     document.body.appendChild(tempContainer);
 
-                    // 计算文章总高度以分配页面
                     let totalHeight = 0;
-                    paragraphs.forEach(p => {
-                        totalHeight += p.offsetHeight + parseInt(window.getComputedStyle(p).marginBottom || 0);
+                    elementsToProcess.forEach(el => {
+                        const style = window.getComputedStyle(el);
+                        totalHeight += el.offsetHeight + parseInt(style.marginTop || 0) + parseInt(style.marginBottom || 0);
                     });
                     const targetHeight = totalHeight / splitCount;
 
@@ -330,26 +593,28 @@
                     let pageIndex = 1;
                     const pages = [currentPage];
 
-                    paragraphs.forEach((p) => {
-                        const pHeight = p.offsetHeight + parseInt(window.getComputedStyle(p).marginBottom || 0);
+                    elementsToProcess.forEach((el) => {
+                        const style = window.getComputedStyle(el);
+                        const elHeight = el.offsetHeight + parseInt(style.marginTop || 0) + parseInt(style.marginBottom || 0);
                         
-                        // 智能判定：如果加上这行超出了均等高度，且不是第一段，就放入下一张图
-                        if (currentHeight + pHeight > targetHeight && currentHeight > 0 && pageIndex < splitCount) {
+                        if (currentHeight + elHeight > targetHeight && currentHeight > 0 && pageIndex < splitCount) {
                             currentPage = createPageContainer();
                             tempContainer.appendChild(currentPage);
                             pages.push(currentPage);
                             currentHeight = 0;
                             pageIndex++;
                         }
-                        currentPage.appendChild(p.cloneNode(true));
-                        currentHeight += pHeight;
+                        
+                        const clone = el.cloneNode(true);
+                        clone.removeAttribute('id'); 
+                        currentPage.appendChild(clone);
+                        currentHeight += elHeight;
                     });
 
-                    // 逐张生成高清图片
                     for (let i = 0; i < pages.length; i++) {
-                        const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff" });
+                        const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: currentBgColor });
                         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                        filesToShare.push(new File([blob], `排版长图_第${i+1}部分.png`, { type: "image/png" }));
+                        filesToShare.push(new File([blob], `排版图_第${i+1}页.png`, { type: "image/png" }));
                         fallbackImages.push(canvas.toDataURL('image/png'));
                     }
 
@@ -359,11 +624,10 @@
                 btn.innerHTML = originalHTML;
                 btn.style.backgroundColor = '#2563eb';
                 
-                // 唤起系统分享菜单，支持多文件同时传输
                 if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
                     await navigator.share({
                         files: filesToShare,
-                        title: '保存排版组图',
+                        title: '保存排版图',
                     });
                 } else {
                     fallbackShowImage(fallbackImages);
@@ -373,22 +637,25 @@
                 console.error(error);
                 btn.innerHTML = originalHTML;
                 btn.style.backgroundColor = '#2563eb';
-                alert('生成过程中出现问题，请刷新页面重试。');
+                alert('生成过程中出现网络或内存延迟，请刷新重试。');
             }
         }
 
-        // 创建拥有完整排版样式的空白页面
         function createPageContainer() {
             const page = document.createElement('div');
             page.className = 'preview-box';
+            page.style.setProperty('--font-family', rootStyles.getPropertyValue('--font-family'));
+            page.style.setProperty('--title-font-size', rootStyles.getPropertyValue('--title-font-size'));
             page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
             page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
             page.style.setProperty('--p-indent', rootStyles.getPropertyValue('--p-indent'));
             page.style.setProperty('--margin-x', rootStyles.getPropertyValue('--margin-x'));
+            page.style.setProperty('--margin-y', rootStyles.getPropertyValue('--margin-y'));
+            page.style.setProperty('--bg-color', rootStyles.getPropertyValue('--bg-color'));
+            page.style.setProperty('--text-color', rootStyles.getPropertyValue('--text-color'));
             return page;
         }
 
-        // 备用展示方案
         function fallbackShowImage(imgDataArray) {
             let resultContainer = document.getElementById('result-container');
             if (resultContainer) resultContainer.remove();
@@ -403,7 +670,7 @@
             
             const hint = document.createElement('h3');
             hint.style.color = '#4338ca';
-            hint.innerText = `👇 已成功切分为 ${imgDataArray.length} 张图片，请逐张长按保存`;
+            hint.innerText = `👇 已生成 ${imgDataArray.length} 张图片，请长按保存`;
             resultContainer.appendChild(hint);
             
             imgDataArray.forEach((data, index) => {
@@ -411,7 +678,7 @@
                 wrapper.style.marginBottom = '30px';
                 
                 const label = document.createElement('p');
-                label.innerText = `第 ${index + 1} 张`;
+                label.innerText = `第 ${index + 1} 页`;
                 label.style.fontWeight = 'bold';
                 label.style.color = '#6b7280';
                 
@@ -430,6 +697,7 @@
             resultContainer.scrollIntoView({ behavior: 'smooth' });
         }
 
+        updateThemeColors('#ffffff', '#333333');
         syncPreview(); 
     </script>
 </body>
