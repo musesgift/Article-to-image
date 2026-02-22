@@ -160,7 +160,7 @@
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
-            text-align: left; /* 核心：始终保持左对齐，防止间距拉扯 */
+            text-align: left; 
             text-justify: inter-ideograph;
             overflow-wrap: break-word; 
             -webkit-hyphens: auto; 
@@ -174,8 +174,9 @@
             text-indent: 0 !important;
         }
         
+        /* 头部对齐增强：现在使用类名 .subtitle-el 来确保生成图片时依然居中 */
         .preview-box h1, 
-        .preview-box h2#preview-subtitle, 
+        .preview-box .subtitle-el, 
         .preview-box .author-byline {
             text-align: center !important; 
             text-indent: 0 !important;
@@ -192,7 +193,8 @@
             color: var(--text-color);
         }
 
-        .preview-box h2#preview-subtitle {
+        /* 副标题样式现在绑定到类名上 */
+        .preview-box .subtitle-el {
             font-size: calc(var(--title-font-size) * 0.65);
             font-weight: normal;
             line-height: 1.5;
@@ -237,7 +239,6 @@
             font-size: calc(var(--font-size) * 0.95);
             line-height: 1.6; 
             margin: 0 0 var(--p-spacing) 0;
-            /* 修正点：题注和尾注也强制改为左对齐，解决字符间距不均 */
             text-align: left !important; 
             text-justify: inter-ideograph;
         }
@@ -375,7 +376,7 @@
                 <div id="preview-header-section">
                     <img id="preview-header-img" class="header-img" style="display: none;">
                     <h1 id="preview-title" style="display: none;"></h1>
-                    <h2 id="preview-subtitle" style="display: none;"></h2>
+                    <h2 id="preview-subtitle" class="subtitle-el" style="display: none;"></h2>
                     <div id="preview-author" class="author-byline" style="display: none;"></div>
                     <div id="preview-header-note" class="header-note" style="display: none;"></div>
                 </div>
