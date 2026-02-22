@@ -134,8 +134,8 @@
             max-width: 100%;
             
             --font-family: system-ui, -apple-system, sans-serif;
-            --title-font-size: 26px; /* 默认设为 26px */
-            --font-size: 16px;       /* 默认设为 16px */
+            --title-font-size: 26px; 
+            --font-size: 16px;      
             --p-spacing: 10px;   
             --p-indent: 0em;
             --header-note-indent: 0em; 
@@ -156,19 +156,17 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
-        /* 针对预览区的所有文字块的基础对齐规则 */
         .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
-            text-align: left; 
+            text-align: left; /* 核心：始终保持左对齐，防止间距拉扯 */
             text-justify: inter-ideograph;
             overflow-wrap: break-word; 
             -webkit-hyphens: auto; 
             hyphens: auto;
         }
 
-        /* 强制覆盖：所有手动对齐的块清除缩进 */
         .preview-box [style*="text-align: center"],
         .preview-box [style*="text-align: right"],
         .preview-box [align="center"],
@@ -176,7 +174,6 @@
             text-indent: 0 !important;
         }
         
-        /* 头部对齐增强：确保不受正文对齐滑块和全局 div 对齐的影响 */
         .preview-box h1, 
         .preview-box h2#preview-subtitle, 
         .preview-box .author-byline {
@@ -240,7 +237,8 @@
             font-size: calc(var(--font-size) * 0.95);
             line-height: 1.6; 
             margin: 0 0 var(--p-spacing) 0;
-            text-align: justify; 
+            /* 修正点：题注和尾注也强制改为左对齐，解决字符间距不均 */
+            text-align: left !important; 
             text-justify: inter-ideograph;
         }
 
