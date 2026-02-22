@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长文章转图片工具</title>
+    <title>长文章转图片工具 - 多图连载版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
@@ -44,6 +44,13 @@
         input[type="range"] {
             cursor: pointer;
             width: 90px;
+        }
+        input[type="number"] {
+            width: 50px;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
         }
         input[type="checkbox"] {
             width: 18px;
@@ -122,26 +129,27 @@
             width: 100%;
         }
 
-        #article-preview {
+        /* 提取出通用的排版类名，方便后台切分时复用样式 */
+        .preview-box {
             width: 400px; 
             max-width: 100%;
             
             --font-size: 12px;
-            --p-spacing: 8px;
+            --p-spacing: 10px;
             --p-indent: 0em;
             --margin-x: 40px; 
             
             background: white;
             padding: 40px var(--margin-x); 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            min-height: 500px;
+            min-height: 100px;
             box-sizing: border-box;
             
             font-size: var(--font-size);
             color: #333;
         }
         
-        #article-preview p {
+        .preview-box p {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
@@ -149,12 +157,6 @@
             text-align: justify; 
         }
 
-        #final-image {
-            max-width: 100%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -184,6 +186,11 @@
                 <input type="checkbox" id="textIndent">
                 <label for="textIndent">首行缩进</label>
             </div>
+            
+            <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px; background: #eef2ff; padding: 5px 15px; border-radius: 6px;">
+                <label for="imageCount" style="color: #4338ca; font-weight: bold;">生成图片张数:</label>
+                <input type="number" id="imageCount" min="1" max="10" value="1">
+            </div>
         </div>
 
         <h2>2. 编辑内容</h2>
@@ -199,14 +206,14 @@
         
         <button class="primary-btn" onclick="generateAndShare()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-            3. 生成并唤起系统保存
+            3. 智能排版并保存到相册
         </button>
     </div>
 
     <div class="panel" id="preview-panel">
-        <h2>预览效果</h2>
+        <h2>预览效果 (仅显示连载总览)</h2>
         <div id="preview-container">
-            <div id="article-preview"></div>
+            <div id="article-preview" class="preview-box"></div>
         </div>
     </div>
 
@@ -272,66 +279,154 @@
             rootStyles.setProperty('--p-indent', e.target.checked ? '2em' : '0em');
         });
 
-        // 全新的：直接调用 iOS/iPadOS 原生分享菜单的逻辑
-        function generateAndShare() {
+        // 核心：处理单图和多图生成的逻辑
+        async function generateAndShare() {
             if (!textInput.textContent.trim()) {
                 alert('请先输入一些文字内容！');
                 return;
             }
             
+            const splitCount = parseInt(document.getElementById('imageCount').value) || 1;
+            const paragraphs = Array.from(preview.children);
+            
+            if (splitCount > 1 && paragraphs.length < splitCount) {
+                alert('文章的段落数量比你要切分的图片张数还少！请按回车多增加几个段落，或者减少切分数量。');
+                return;
+            }
+
             const btn = document.querySelector('.primary-btn');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '正在处理排版...';
+            btn.innerHTML = '正在智能切分并排版，请稍候...';
             btn.style.backgroundColor = '#9ca3af'; 
             
-            html2canvas(preview, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+            try {
+                let filesToShare = [];
+                let fallbackImages = [];
+
+                if (splitCount === 1) {
+                    // 单图模式
+                    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: "#ffffff" });
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    filesToShare.push(new File([blob], "排版长图.png", { type: "image/png" }));
+                    fallbackImages.push(canvas.toDataURL('image/png'));
+                } else {
+                    // 多图智能切分模式
+                    const tempContainer = document.createElement('div');
+                    tempContainer.style.position = 'absolute';
+                    tempContainer.style.left = '-9999px';
+                    tempContainer.style.top = '0';
+                    document.body.appendChild(tempContainer);
+
+                    // 计算文章总高度以分配页面
+                    let totalHeight = 0;
+                    paragraphs.forEach(p => {
+                        totalHeight += p.offsetHeight + parseInt(window.getComputedStyle(p).marginBottom || 0);
+                    });
+                    const targetHeight = totalHeight / splitCount;
+
+                    let currentPage = createPageContainer();
+                    tempContainer.appendChild(currentPage);
+                    let currentHeight = 0;
+                    let pageIndex = 1;
+                    const pages = [currentPage];
+
+                    paragraphs.forEach((p) => {
+                        const pHeight = p.offsetHeight + parseInt(window.getComputedStyle(p).marginBottom || 0);
+                        
+                        // 智能判定：如果加上这行超出了均等高度，且不是第一段，就放入下一张图
+                        if (currentHeight + pHeight > targetHeight && currentHeight > 0 && pageIndex < splitCount) {
+                            currentPage = createPageContainer();
+                            tempContainer.appendChild(currentPage);
+                            pages.push(currentPage);
+                            currentHeight = 0;
+                            pageIndex++;
+                        }
+                        currentPage.appendChild(p.cloneNode(true));
+                        currentHeight += pHeight;
+                    });
+
+                    // 逐张生成高清图片
+                    for (let i = 0; i < pages.length; i++) {
+                        const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff" });
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                        filesToShare.push(new File([blob], `排版长图_第${i+1}部分.png`, { type: "image/png" }));
+                        fallbackImages.push(canvas.toDataURL('image/png'));
+                    }
+
+                    document.body.removeChild(tempContainer);
+                }
+
                 btn.innerHTML = originalHTML;
                 btn.style.backgroundColor = '#2563eb';
                 
-                // 1. 将画板转换为真实的文件数据 (Blob)
-                canvas.toBlob(function(blob) {
-                    const file = new File([blob], "排版长图.png", { type: "image/png" });
-                    
-                    // 2. 检查当前浏览器（Chrome/Safari）是否支持调用系统分享菜单
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({
-                            files: [file],
-                            title: '保存排版长图',
-                        })
-                        .then(() => console.log('分享/保存成功'))
-                        .catch((error) => console.log('用户取消或分享失败', error));
-                    } else {
-                        // 3. 极少数不支持的情况（比如在电脑上），回退到页面底部显示图片
-                        fallbackShowImage(canvas.toDataURL('image/png'));
-                    }
-                }, 'image/png');
-            });
+                // 唤起系统分享菜单，支持多文件同时传输
+                if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
+                    await navigator.share({
+                        files: filesToShare,
+                        title: '保存排版组图',
+                    });
+                } else {
+                    fallbackShowImage(fallbackImages);
+                }
+
+            } catch (error) {
+                console.error(error);
+                btn.innerHTML = originalHTML;
+                btn.style.backgroundColor = '#2563eb';
+                alert('生成过程中出现问题，请刷新页面重试。');
+            }
         }
 
-        // 备用的显示图片逻辑
-        function fallbackShowImage(imgData) {
+        // 创建拥有完整排版样式的空白页面
+        function createPageContainer() {
+            const page = document.createElement('div');
+            page.className = 'preview-box';
+            page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
+            page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
+            page.style.setProperty('--p-indent', rootStyles.getPropertyValue('--p-indent'));
+            page.style.setProperty('--margin-x', rootStyles.getPropertyValue('--margin-x'));
+            return page;
+        }
+
+        // 备用展示方案
+        function fallbackShowImage(imgDataArray) {
             let resultContainer = document.getElementById('result-container');
-            if (!resultContainer) {
-                resultContainer = document.createElement('div');
-                resultContainer.id = 'result-container';
-                resultContainer.style.marginTop = '40px';
-                resultContainer.style.padding = '20px';
-                resultContainer.style.backgroundColor = '#eef2ff';
-                resultContainer.style.borderRadius = '12px';
-                resultContainer.style.textAlign = 'center';
+            if (resultContainer) resultContainer.remove();
+
+            resultContainer = document.createElement('div');
+            resultContainer.id = 'result-container';
+            resultContainer.style.marginTop = '40px';
+            resultContainer.style.padding = '20px';
+            resultContainer.style.backgroundColor = '#eef2ff';
+            resultContainer.style.borderRadius = '12px';
+            resultContainer.style.textAlign = 'center';
+            
+            const hint = document.createElement('h3');
+            hint.style.color = '#4338ca';
+            hint.innerText = `👇 已成功切分为 ${imgDataArray.length} 张图片，请逐张长按保存`;
+            resultContainer.appendChild(hint);
+            
+            imgDataArray.forEach((data, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '30px';
                 
-                const hint = document.createElement('h3');
-                hint.style.color = '#4338ca';
-                hint.innerText = '请右键或长按下方图片保存';
+                const label = document.createElement('p');
+                label.innerText = `第 ${index + 1} 张`;
+                label.style.fontWeight = 'bold';
+                label.style.color = '#6b7280';
                 
                 const imgElement = document.createElement('img');
-                imgElement.id = 'final-image';
+                imgElement.src = data;
+                imgElement.style.maxWidth = '100%';
+                imgElement.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+                imgElement.style.borderRadius = '8px';
                 
-                resultContainer.appendChild(hint);
-                resultContainer.appendChild(imgElement);
-                document.getElementById('preview-panel').appendChild(resultContainer);
-            }
-            document.getElementById('final-image').src = imgData;
+                wrapper.appendChild(label);
+                wrapper.appendChild(imgElement);
+                resultContainer.appendChild(wrapper);
+            });
+            
+            document.getElementById('preview-panel').appendChild(resultContainer);
             resultContainer.scrollIntoView({ behavior: 'smooth' });
         }
 
