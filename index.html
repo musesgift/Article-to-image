@@ -134,12 +134,12 @@
             max-width: 100%;
             
             --font-family: system-ui, -apple-system, sans-serif;
-            --title-font-size: 20px;
-            --font-size: 13px;  
-            --p-spacing: 5px;   
+            --title-font-size: 26px; /* 默认设为 26px */
+            --font-size: 16px;       /* 默认设为 16px */
+            --p-spacing: 10px;   
             --p-indent: 0em;
-            --header-note-indent: 0em; /* 新增题注缩进变量 */
-            --footer-note-indent: 0em; /* 新增尾注缩进变量 */
+            --header-note-indent: 0em; 
+            --footer-note-indent: 0em; 
             --margin-y: 50px; 
             --margin-x: 40px;   
             --bg-color: #ffffff;
@@ -156,11 +156,11 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
+        /* 针对预览区的所有文字块的基础对齐规则 */
         .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
-            
             text-align: left; 
             text-justify: inter-ideograph;
             overflow-wrap: break-word; 
@@ -168,6 +168,7 @@
             hyphens: auto;
         }
 
+        /* 强制覆盖：所有手动对齐的块清除缩进 */
         .preview-box [style*="text-align: center"],
         .preview-box [style*="text-align: right"],
         .preview-box [align="center"],
@@ -175,35 +176,40 @@
             text-indent: 0 !important;
         }
         
+        /* 头部对齐增强：确保不受正文对齐滑块和全局 div 对齐的影响 */
+        .preview-box h1, 
+        .preview-box h2#preview-subtitle, 
+        .preview-box .author-byline {
+            text-align: center !important; 
+            text-indent: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100%;
+        }
+
         .preview-box h1 {
             font-size: var(--title-font-size);
             font-weight: 800;
             line-height: 1.4;
-            margin: 0 0 8px 0;
-            text-align: center;
+            margin-bottom: 8px;
             color: var(--text-color);
-            text-indent: 0 !important; 
         }
 
         .preview-box h2#preview-subtitle {
             font-size: calc(var(--title-font-size) * 0.65);
             font-weight: normal;
             line-height: 1.5;
-            margin: 0 0 12px 0;
-            text-align: center;
+            margin-bottom: 12px;
             color: var(--text-color);
             opacity: 0.8;
-            text-indent: 0 !important; 
         }
 
         .preview-box .author-byline {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-color);
             opacity: 0.6;
-            margin: 0;
-            text-align: center;
+            margin-bottom: 0;
             font-weight: 500;
-            text-indent: 0 !important; 
         }
 
         .preview-box .header-img {
@@ -214,7 +220,6 @@
             display: block;
         }
 
-        /* 题注的外框和文字样式 */
         .preview-box .header-note {
             opacity: 0.75;
             border-left: 3px solid var(--text-color);
@@ -223,7 +228,6 @@
             text-indent: 0 !important; 
         }
         
-        /* 尾注的外框和文字样式 */
         .preview-box .footer-note {
             opacity: 0.6;
             border-top: 1px dashed var(--text-color);
@@ -232,20 +236,17 @@
             text-indent: 0 !important; 
         }
 
-        /* 题注和尾注内部的段落排版引擎 */
         .preview-box .header-note p, .preview-box .footer-note p {
             font-size: calc(var(--font-size) * 0.95);
-            line-height: 1.6; /* 行距比正文略紧 */
-            margin: 0 0 calc(var(--p-spacing) * 0.6) 0; /* 段距自动缩减为正文的 60% */
-            text-align: justify; /* 题注尾注依然保留两端对齐，显得更规整 */
+            line-height: 1.6; 
+            margin: 0 0 var(--p-spacing) 0;
+            text-align: justify; 
             text-justify: inter-ideograph;
         }
 
-        /* 核心：绑定各自独立的缩进变量 */
         .preview-box .header-note p { text-indent: var(--header-note-indent) !important; }
         .preview-box .footer-note p { text-indent: var(--footer-note-indent) !important; }
 
-        /* 去除最后一段的多余底部留白 */
         .preview-box .header-note p:last-child, .preview-box .footer-note p:last-child {
             margin-bottom: 0;
         }
@@ -268,20 +269,20 @@
 
             <div class="setting-item">
                 <label for="titleFontSize">标题字号:</label>
-                <input type="range" id="titleFontSize" min="16" max="48" value="20">
-                <span id="titleFontSizeVal" style="width: 35px;">20px</span>
+                <input type="range" id="titleFontSize" min="16" max="48" value="26">
+                <span id="titleFontSizeVal" style="width: 35px;">26px</span>
             </div>
 
             <div class="setting-item">
                 <label for="fontSize">正文字号:</label>
-                <input type="range" id="fontSize" min="10" max="24" value="13">
-                <span id="fontSizeVal" style="width: 35px;">13px</span>
+                <input type="range" id="fontSize" min="10" max="24" value="16">
+                <span id="fontSizeVal" style="width: 35px;">16px</span>
             </div>
             
             <div class="setting-item">
                 <label for="paraSpacing">段间距:</label>
-                <input type="range" id="paraSpacing" min="0" max="40" value="5">
-                <span id="paraSpacingVal" style="width: 35px;">5px</span>
+                <input type="range" id="paraSpacing" min="0" max="40" value="10">
+                <span id="paraSpacingVal" style="width: 35px;">10px</span>
             </div>
 
             <div class="setting-item">
@@ -404,7 +405,6 @@
         const pageYMarginInput = document.getElementById('pageYMargin');
         const pageYMarginVal = document.getElementById('pageYMarginVal');
         
-        // 三个缩进开关
         const textIndentInput = document.getElementById('textIndent');
         const headerNoteIndentInput = document.getElementById('headerNoteIndent');
         const footerNoteIndentInput = document.getElementById('footerNoteIndent');
@@ -474,14 +474,11 @@
             }
         }
 
-        // 核心改动：把文本域的换行转化为专业的段落 <p>
         const bindTextSync = (inputEl, previewEl) => {
             inputEl.addEventListener('input', () => {
                 if (inputEl.tagName === 'TEXTAREA') {
-                    // 题注和尾注：将换行转化为段落
                     previewEl.innerHTML = inputEl.value.split(/\r?\n/).map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
                 } else {
-                    // 标题和署名：单行处理
                     previewEl.innerHTML = inputEl.value;
                 }
                 previewEl.style.display = inputEl.value.trim() ? 'block' : 'none';
@@ -565,7 +562,6 @@
             pageYMarginVal.textContent = e.target.value + 'px';
         });
 
-        // 监听三个独立的缩进控制
         textIndentInput.addEventListener('change', (e) => {
             rootStyles.setProperty('--p-indent', e.target.checked ? '2em' : '0em');
         });
@@ -690,7 +686,6 @@
             }
         }
 
-        // 创建多图切分页面时，一并传递所有新增加的缩进变量
         function createPageContainer() {
             const page = document.createElement('div');
             page.className = 'preview-box';
