@@ -135,11 +135,11 @@
             
             --font-family: system-ui, -apple-system, sans-serif;
             --title-font-size: 20px;
-            --font-size: 13px;  /* 默认字号 13px */
+            --font-size: 13px;  
             --p-spacing: 5px;   
             --p-indent: 0em;
             --margin-y: 50px; 
-            --margin-x: 40px;   /* 默认左右边距 40px */
+            --margin-x: 40px;   
             --bg-color: #ffffff;
             --text-color: #333333;
             
@@ -158,8 +158,11 @@
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
-            word-wrap: break-word;
-            text-align: justify; 
+            
+            /* 核心解法：默认采用左对齐，彻底杜绝中文字符被拉扯 */
+            text-align: left; 
+            word-wrap: break-word; /* 保证单词遇到边界才换行 */
+            word-break: normal; /* 保持英文单词绝对完整 */
         }
 
         .preview-box [style*="text-align: center"],
@@ -214,7 +217,7 @@
             margin: 20px 0 0 0;
             line-height: 1.6;
             text-align: justify;
-            text-indent: 0 !important; /* 强制取消题注的缩进 */
+            text-indent: 0 !important; 
         }
 
         .preview-box .footer-note {
@@ -226,7 +229,7 @@
             margin: 40px 0 0 0;
             line-height: 1.6;
             text-align: justify;
-            text-indent: 0 !important; /* 强制取消尾注的缩进 */
+            text-indent: 0 !important; 
         }
 
     </style>
@@ -322,9 +325,10 @@
                 <button class="tool-btn" onclick="formatDoc('underline')" title="下划线"><u>U</u></button>
                 <button class="tool-btn" onclick="formatDoc('strikeThrough')" title="删除线"><s>S</s></button>
                 <div class="toolbar-divider"></div>
-                <button class="tool-btn" onclick="formatDoc('justifyLeft')" title="居左">居左</button>
-                <button class="tool-btn" onclick="formatDoc('justifyCenter')" title="居中">居中</button>
-                <button class="tool-btn" onclick="formatDoc('justifyRight')" title="居右">居右</button>
+                <button class="tool-btn" onclick="formatDoc('justifyLeft')" title="居左对齐">左对齐</button>
+                <button class="tool-btn" onclick="formatDoc('justifyCenter')" title="居中对齐">居中</button>
+                <button class="tool-btn" onclick="formatDoc('justifyRight')" title="居右对齐">居右</button>
+                <button class="tool-btn" onclick="formatDoc('justifyFull')" title="两端对齐 (可能拉扯中文字距)">两端对齐</button>
             </div>
             <div id="textInput" contenteditable="true" data-placeholder="在此粘贴或输入文章正文，可选中部分文字单独设置格式和对齐..."></div>
         </div>
