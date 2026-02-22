@@ -162,9 +162,11 @@
             line-height: 1.8;
             text-align: left; 
             text-justify: inter-ideograph;
+            
+            /* 核心修复：坚决不截断英文单词，让其整体换行 */
+            word-break: normal; 
+            /* 仅在遇到无空格的超长网址时才允许截断，防止撑爆画面 */
             overflow-wrap: break-word; 
-            -webkit-hyphens: auto; 
-            hyphens: auto;
         }
 
         .preview-box [style*="text-align: center"],
@@ -174,7 +176,6 @@
             text-indent: 0 !important;
         }
         
-        /* 头部对齐增强：现在使用类名 .subtitle-el 来确保生成图片时依然居中 */
         .preview-box h1, 
         .preview-box .subtitle-el, 
         .preview-box .author-byline {
@@ -183,6 +184,8 @@
             margin-left: 0 !important;
             margin-right: 0 !important;
             width: 100%;
+            word-break: normal;
+            overflow-wrap: break-word;
         }
 
         .preview-box h1 {
@@ -193,7 +196,6 @@
             color: var(--text-color);
         }
 
-        /* 副标题样式现在绑定到类名上 */
         .preview-box .subtitle-el {
             font-size: calc(var(--title-font-size) * 0.65);
             font-weight: normal;
@@ -241,6 +243,8 @@
             margin: 0 0 var(--p-spacing) 0;
             text-align: left !important; 
             text-justify: inter-ideograph;
+            word-break: normal; 
+            overflow-wrap: break-word; 
         }
 
         .preview-box .header-note p { text-indent: var(--header-note-indent) !important; }
