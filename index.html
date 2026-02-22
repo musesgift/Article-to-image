@@ -163,9 +163,7 @@
             text-align: left; 
             text-justify: inter-ideograph;
             
-            /* 核心修复：坚决不截断英文单词，让其整体换行 */
             word-break: normal; 
-            /* 仅在遇到无空格的超长网址时才允许截断，防止撑爆画面 */
             overflow-wrap: break-word; 
         }
 
@@ -593,9 +591,8 @@
             if (previewHeaderNote.style.display !== 'none') elementsToProcess.push(previewHeaderNote);
             
             Array.from(contentSection.children).forEach(el => {
-                if(el.textContent.trim() || el.querySelector('img')) {
-                    elementsToProcess.push(el);
-                }
+                // 核心修复：不再过滤掉空白行（<p><br></p> 或全空格的段落），保留用户排版的呼吸感
+                elementsToProcess.push(el);
             });
 
             if (previewFooterNote.style.display !== 'none') elementsToProcess.push(previewFooterNote);
