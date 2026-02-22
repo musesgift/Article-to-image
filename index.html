@@ -43,7 +43,7 @@
         }
         input[type="range"] { cursor: pointer; width: 80px; }
         input[type="number"] { width: 45px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
         input[type="color"] { cursor: pointer; width: 32px; height: 32px; border: none; border-radius: 4px; padding: 0; background: none; }
         select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; cursor: pointer; }
         
@@ -138,6 +138,8 @@
             --font-size: 13px;  
             --p-spacing: 5px;   
             --p-indent: 0em;
+            --header-note-indent: 0em; /* 新增题注缩进变量 */
+            --footer-note-indent: 0em; /* 新增尾注缩进变量 */
             --margin-y: 50px; 
             --margin-x: 40px;   
             --bg-color: #ffffff;
@@ -159,10 +161,11 @@
             text-indent: var(--p-indent);
             line-height: 1.8;
             
-            /* 核心解法：默认采用左对齐，彻底杜绝中文字符被拉扯 */
             text-align: left; 
-            word-wrap: break-word; /* 保证单词遇到边界才换行 */
-            word-break: normal; /* 保持英文单词绝对完整 */
+            text-justify: inter-ideograph;
+            overflow-wrap: break-word; 
+            -webkit-hyphens: auto; 
+            hyphens: auto;
         }
 
         .preview-box [style*="text-align: center"],
@@ -179,6 +182,7 @@
             margin: 0 0 8px 0;
             text-align: center;
             color: var(--text-color);
+            text-indent: 0 !important; 
         }
 
         .preview-box h2#preview-subtitle {
@@ -189,6 +193,7 @@
             text-align: center;
             color: var(--text-color);
             opacity: 0.8;
+            text-indent: 0 !important; 
         }
 
         .preview-box .author-byline {
@@ -198,6 +203,7 @@
             margin: 0;
             text-align: center;
             font-weight: 500;
+            text-indent: 0 !important; 
         }
 
         .preview-box .header-img {
@@ -208,33 +214,45 @@
             display: block;
         }
 
+        /* 题注的外框和文字样式 */
         .preview-box .header-note {
-            font-size: calc(var(--font-size) * 0.95);
-            color: var(--text-color);
             opacity: 0.75;
             border-left: 3px solid var(--text-color);
             padding-left: 12px;
             margin: 20px 0 0 0;
-            line-height: 1.6;
-            text-align: justify;
             text-indent: 0 !important; 
         }
-
+        
+        /* 尾注的外框和文字样式 */
         .preview-box .footer-note {
-            font-size: calc(var(--font-size) * 0.9);
-            color: var(--text-color);
             opacity: 0.6;
             border-top: 1px dashed var(--text-color);
             padding-top: 20px;
             margin: 40px 0 0 0;
-            line-height: 1.6;
-            text-align: justify;
             text-indent: 0 !important; 
+        }
+
+        /* 题注和尾注内部的段落排版引擎 */
+        .preview-box .header-note p, .preview-box .footer-note p {
+            font-size: calc(var(--font-size) * 0.95);
+            line-height: 1.6; /* 行距比正文略紧 */
+            margin: 0 0 calc(var(--p-spacing) * 0.6) 0; /* 段距自动缩减为正文的 60% */
+            text-align: justify; /* 题注尾注依然保留两端对齐，显得更规整 */
+            text-justify: inter-ideograph;
+        }
+
+        /* 核心：绑定各自独立的缩进变量 */
+        .preview-box .header-note p { text-indent: var(--header-note-indent) !important; }
+        .preview-box .footer-note p { text-indent: var(--footer-note-indent) !important; }
+
+        /* 去除最后一段的多余底部留白 */
+        .preview-box .header-note p:last-child, .preview-box .footer-note p:last-child {
+            margin-bottom: 0;
         }
 
     </style>
 </head>
-<body>
+<body lang="en">
 
     <div class="panel">
         <h2>1. 排版设置</h2>
@@ -261,7 +279,7 @@
             </div>
             
             <div class="setting-item">
-                <label for="paraSpacing">段距:</label>
+                <label for="paraSpacing">段间距:</label>
                 <input type="range" id="paraSpacing" min="0" max="40" value="5">
                 <span id="paraSpacingVal" style="width: 35px;">5px</span>
             </div>
@@ -278,9 +296,16 @@
                 <span id="pageYMarginVal" style="width: 35px;">50px</span>
             </div>
 
-            <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px;">
-                <input type="checkbox" id="textIndent">
-                <label for="textIndent">首行缩进</label>
+            <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px; display: flex; gap: 15px;">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="checkbox" id="textIndent"> 正文缩进
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="checkbox" id="headerNoteIndent"> 题注缩进
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="checkbox" id="footerNoteIndent"> 尾注缩进
+                </label>
             </div>
             
             <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px; background: #eef2ff; padding: 5px 15px; border-radius: 6px;">
@@ -378,7 +403,11 @@
         const pageMarginVal = document.getElementById('pageMarginVal');
         const pageYMarginInput = document.getElementById('pageYMargin');
         const pageYMarginVal = document.getElementById('pageYMarginVal');
+        
+        // 三个缩进开关
         const textIndentInput = document.getElementById('textIndent');
+        const headerNoteIndentInput = document.getElementById('headerNoteIndent');
+        const footerNoteIndentInput = document.getElementById('footerNoteIndent');
 
         const bgColorInput = document.getElementById('bgColor');
         const textColorInput = document.getElementById('textColor');
@@ -445,9 +474,16 @@
             }
         }
 
+        // 核心改动：把文本域的换行转化为专业的段落 <p>
         const bindTextSync = (inputEl, previewEl) => {
             inputEl.addEventListener('input', () => {
-                previewEl.innerHTML = inputEl.value.replace(/\n/g, '<br>');
+                if (inputEl.tagName === 'TEXTAREA') {
+                    // 题注和尾注：将换行转化为段落
+                    previewEl.innerHTML = inputEl.value.split(/\r?\n/).map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
+                } else {
+                    // 标题和署名：单行处理
+                    previewEl.innerHTML = inputEl.value;
+                }
                 previewEl.style.display = inputEl.value.trim() ? 'block' : 'none';
                 if(inputEl !== inputFooterNote) updateHeaderSpacing();
             });
@@ -529,8 +565,17 @@
             pageYMarginVal.textContent = e.target.value + 'px';
         });
 
+        // 监听三个独立的缩进控制
         textIndentInput.addEventListener('change', (e) => {
             rootStyles.setProperty('--p-indent', e.target.checked ? '2em' : '0em');
+        });
+        
+        headerNoteIndentInput.addEventListener('change', (e) => {
+            rootStyles.setProperty('--header-note-indent', e.target.checked ? '2em' : '0em');
+        });
+        
+        footerNoteIndentInput.addEventListener('change', (e) => {
+            rootStyles.setProperty('--footer-note-indent', e.target.checked ? '2em' : '0em');
         });
 
         async function generateAndShare() {
@@ -645,6 +690,7 @@
             }
         }
 
+        // 创建多图切分页面时，一并传递所有新增加的缩进变量
         function createPageContainer() {
             const page = document.createElement('div');
             page.className = 'preview-box';
@@ -653,6 +699,8 @@
             page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
             page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
             page.style.setProperty('--p-indent', rootStyles.getPropertyValue('--p-indent'));
+            page.style.setProperty('--header-note-indent', rootStyles.getPropertyValue('--header-note-indent'));
+            page.style.setProperty('--footer-note-indent', rootStyles.getPropertyValue('--footer-note-indent'));
             page.style.setProperty('--margin-x', rootStyles.getPropertyValue('--margin-x'));
             page.style.setProperty('--margin-y', rootStyles.getPropertyValue('--margin-y'));
             page.style.setProperty('--bg-color', rootStyles.getPropertyValue('--bg-color'));
