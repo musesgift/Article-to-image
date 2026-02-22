@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长文章转图片工具 - 系统分享版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 30px;
+            padding: 30px;
+            background-color: #f7f9fc;
+            margin: 0;
+            color: #333;
+        }
+        .panel {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .settings-group {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            cursor: pointer;
+            width: 90px;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .editor-container {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .toolbar {
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            gap: 10px;
+        }
+        .tool-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            transition: background 0.2s;
+        }
+        .tool-btn:hover {
+            background: #e2e8f0;
+        }
+        #textInput {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            font-size: 16px;
+            overflow-y: auto;
+            box-sizing: border-box;
+            outline: none;
+            line-height: 1.6;
+        }
+        #textInput:empty:before {
+            content: attr(data-placeholder);
+            color: #94a3b8;
+        }
+
+        .primary-btn {
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background 0.2s;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .primary-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        #preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #article-preview {
+            width: 400px; 
+            max-width: 100%;
+            
+            --font-size: 12px;
+            --p-spacing: 10px;
+            --p-indent: 0em;
+            --margin-x: 40px; 
+            
+            background: white;
+            padding: 40px var(--margin-x); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-height: 500px;
+            box-sizing: border-box;
+            
+            font-size: var(--font-size);
+            color: #333;
+        }
+        
+        #article-preview p {
+            margin: 0 0 var(--p-spacing) 0;
+            text-indent: var(--p-indent);
+            line-height: 1.8;
+            word-wrap: break-word;
+            text-align: justify; 
+        }
+
+        #final-image {
+            max-width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h2>1. 排版设置</h2>
+        <div class="settings-group">
+            <div class="setting-item">
+                <label for="fontSize">字号:</label>
+                <input type="range" id="fontSize" min="10" max="24" value="12">
+                <span id="fontSizeVal" style="width: 35px;">12px</span>
+            </div>
+            
+            <div class="setting-item">
+                <label for="paraSpacing">段距:</label>
+                <input type="range" id="paraSpacing" min="0" max="40" value="10">
+                <span id="paraSpacingVal" style="width: 35px;">10px</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="pageMargin">页边距:</label>
+                <input type="range" id="pageMargin" min="10" max="60" value="40">
+                <span id="pageMarginVal" style="width: 35px;">40px</span>
+            </div>
+
+            <div class="setting-item" style="border-left: 1px solid #eee; padding-left: 15px;">
+                <input type="checkbox" id="textIndent">
+                <label for="textIndent">首行缩进</label>
+            </div>
+        </div>
+
+        <h2>2. 编辑内容</h2>
+        <div class="editor-container">
+            <div class="toolbar">
+                <button class="tool-btn" onclick="formatDoc('bold')" title="加粗"><b>B</b></button>
+                <button class="tool-btn" onclick="formatDoc('italic')" title="斜体"><i>I</i></button>
+                <button class="tool-btn" onclick="formatDoc('underline')" title="下划线"><u>U</u></button>
+                <button class="tool-btn" onclick="formatDoc('strikeThrough')" title="删除线"><s>S</s></button>
+            </div>
+            <div id="textInput" contenteditable="true" data-placeholder="在此输入文章，粘贴纯文本会自动排版..."></div>
+        </div>
+        
+        <button class="primary-btn" onclick="generateAndShare()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            3. 生成并唤起系统保存
+        </button>
+    </div>
+
+    <div class="panel" id="preview-panel">
+        <h2>预览效果</h2>
+        <div id="preview-container">
+            <div id="article-preview"></div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const preview = document.getElementById('article-preview');
+        const rootStyles = preview.style;
+
+        const fontSizeInput = document.getElementById('fontSize');
+        const fontSizeVal = document.getElementById('fontSizeVal');
+        const paraSpacingInput = document.getElementById('paraSpacing');
+        const paraSpacingVal = document.getElementById('paraSpacingVal');
+        const pageMarginInput = document.getElementById('pageMargin');
+        const pageMarginVal = document.getElementById('pageMarginVal');
+        const textIndentInput = document.getElementById('textIndent');
+
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+
+        function formatDoc(cmd) {
+            document.execCommand(cmd, false, null);
+            textInput.focus();
+            syncPreview(); 
+        }
+
+        textInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+            const formattedText = text.split(/\r?\n/).map(line => {
+                return line.trim() ? `<p>${line}</p>` : '<p><br></p>';
+            }).join('');
+            document.execCommand('insertHTML', false, formattedText);
+            syncPreview();
+        });
+
+        function syncPreview() {
+            const content = textInput.innerHTML;
+            if (!textInput.textContent.trim() && !content.includes('img')) {
+                preview.innerHTML = '<div style="color: #999; text-align: center; margin-top: 50px;">在此输入文章...</div>';
+                return;
+            }
+            preview.innerHTML = content;
+        }
+
+        textInput.addEventListener('input', syncPreview);
+        textInput.addEventListener('keyup', syncPreview);
+
+        fontSizeInput.addEventListener('input', (e) => {
+            rootStyles.setProperty('--font-size', e.target.value + 'px');
+            fontSizeVal.textContent = e.target.value + 'px';
+        });
+
+        paraSpacingInput.addEventListener('input', (e) => {
+            rootStyles.setProperty('--p-spacing', e.target.value + 'px');
+            paraSpacingVal.textContent = e.target.value + 'px';
+        });
+
+        pageMarginInput.addEventListener('input', (e) => {
+            rootStyles.setProperty('--margin-x', e.target.value + 'px');
+            pageMarginVal.textContent = e.target.value + 'px';
+        });
+
+        textIndentInput.addEventListener('change', (e) => {
+            rootStyles.setProperty('--p-indent', e.target.checked ? '2em' : '0em');
+        });
+
+        // 全新的：直接调用 iOS/iPadOS 原生分享菜单的逻辑
+        function generateAndShare() {
+            if (!textInput.textContent.trim()) {
+                alert('请先输入一些文字内容！');
+                return;
+            }
+            
+            const btn = document.querySelector('.primary-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '正在处理排版...';
+            btn.style.backgroundColor = '#9ca3af'; 
+            
+            html2canvas(preview, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                btn.innerHTML = originalHTML;
+                btn.style.backgroundColor = '#2563eb';
+                
+                // 1. 将画板转换为真实的文件数据 (Blob)
+                canvas.toBlob(function(blob) {
+                    const file = new File([blob], "排版长图.png", { type: "image/png" });
+                    
+                    // 2. 检查当前浏览器（Chrome/Safari）是否支持调用系统分享菜单
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({
+                            files: [file],
+                            title: '保存排版长图',
+                        })
+                        .then(() => console.log('分享/保存成功'))
+                        .catch((error) => console.log('用户取消或分享失败', error));
+                    } else {
+                        // 3. 极少数不支持的情况（比如在电脑上），回退到页面底部显示图片
+                        fallbackShowImage(canvas.toDataURL('image/png'));
+                    }
+                }, 'image/png');
+            });
+        }
+
+        // 备用的显示图片逻辑
+        function fallbackShowImage(imgData) {
+            let resultContainer = document.getElementById('result-container');
+            if (!resultContainer) {
+                resultContainer = document.createElement('div');
+                resultContainer.id = 'result-container';
+                resultContainer.style.marginTop = '40px';
+                resultContainer.style.padding = '20px';
+                resultContainer.style.backgroundColor = '#eef2ff';
+                resultContainer.style.borderRadius = '12px';
+                resultContainer.style.textAlign = 'center';
+                
+                const hint = document.createElement('h3');
+                hint.style.color = '#4338ca';
+                hint.innerText = '请右键或长按下方图片保存';
+                
+                const imgElement = document.createElement('img');
+                imgElement.id = 'final-image';
+                
+                resultContainer.appendChild(hint);
+                resultContainer.appendChild(imgElement);
+                document.getElementById('preview-panel').appendChild(resultContainer);
+            }
+            document.getElementById('final-image').src = imgData;
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        syncPreview(); 
+    </script>
+</body>
+</html>
