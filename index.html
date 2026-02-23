@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长文章转图片工具 - 完美出版级</title>
+    <title>长文章转图片工具</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
@@ -281,7 +281,7 @@
             </div>
             
             <div class="setting-item">
-                <label for="paraSpacing">段间距:</label>
+                <label for="paraSpacing">段落间距:</label>
                 <input type="range" id="paraSpacing" min="0" max="40" value="10">
                 <span id="paraSpacingVal" style="width: 35px;">10px</span>
             </div>
@@ -338,9 +338,9 @@
                 <input type="file" id="headerImgUpload" accept="image/*" style="display: none;">
                 <button id="removeImgBtn" class="tool-btn" style="display: none; background: #fee2e2; color: #ef4444; border-color: #fca5a5;">🗑️ 移除</button>
             </div>
-            <input type="text" id="inputTitle" class="text-input" placeholder="输入文章大标题..." style="font-weight: bold;">
-            <input type="text" id="inputSubtitle" class="text-input" placeholder="输入副标题...">
-            <input type="text" id="inputAuthor" class="text-input" placeholder="输入作者署名...">
+            <input type="text" id="inputTitle" class="text-input" placeholder="输入大标题" style="font-weight: bold;">
+            <input type="text" id="inputSubtitle" class="text-input" placeholder="输入副标题">
+            <input type="text" id="inputAuthor" class="text-input" placeholder="输入作者署名">
             <textarea id="inputHeaderNote" class="text-input" placeholder="输入题注 (如：名言引语、文章出处等)" style="height: 60px; resize: none;"></textarea>
         </div>
 
@@ -357,7 +357,7 @@
                 <button class="tool-btn" onclick="formatDoc('justifyRight')" title="居右对齐">居右</button>
                 <button class="tool-btn" onclick="formatDoc('justifyFull')" title="两端对齐 (可能拉扯中文字距)">两端对齐</button>
             </div>
-            <div id="textInput" contenteditable="true" data-placeholder="在此粘贴或输入文章正文，可选中部分文字单独设置格式和对齐..."></div>
+            <div id="textInput" contenteditable="true" data-placeholder="在此粘贴或输入文章正文，可选中部分文字单独设置格式和对齐"></div>
         </div>
 
         <h2>4. 文章尾部 (选填)</h2>
