@@ -8,10 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="排版大师">
     <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat/pen.svg?width=192&height=192">
     
-    <title>长文章转图片工具 - 0309测试v3</title>
+    <title>长文章转图片工具</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -31,8 +30,6 @@
         .font-song, .font-song * { font-family: "Songti SC", "STSongti-SC-Regular", "STSong", "SimSun", serif !important; }
         /* 霞鹜文楷：极美的楷体/仿宋替代品 */
         .font-wenkai, .font-wenkai * { font-family: "LXGW WenKai Screen", sans-serif !important; }
-        /* 站酷小薇：优雅的文艺字体替代品 */
-        .font-xiaowei, .font-xiaowei * { font-family: "ZCOOL XiaoWei", serif !important; }
         .font-serif-mix, .font-serif-mix * { font-family: Georgia, "Times New Roman", "Songti SC", "STSongti-SC-Regular", serif !important; }
 
         .panel {
@@ -282,7 +279,6 @@
                     <option value="hei">现代黑体 (系统默认)</option>
                     <option value="song">经典宋体 (系统自带)</option>
                     <option value="wenkai">霞鹜文楷 (☁️云端加载，全平台完美)</option>
-                    <option value="xiaowei">站酷小薇 (☁️云端加载，优雅文艺)</option>
                     <option value="serif-mix">文学衬线 (中英混排推荐)</option>
                 </select>
             </div>
@@ -455,7 +451,7 @@
         function applyGlobalFont() {
             const fontKey = fontFamilySelect.value;
             const prefix = 'font-';
-            const allFontClasses = ['font-hei', 'font-song', 'font-wenkai', 'font-xiaowei', 'font-serif-mix'];
+            const allFontClasses = ['font-hei', 'font-song', 'font-wenkai', 'font-serif-mix'];
             
             [preview, textInput, inputTitle, inputSubtitle, inputAuthor, inputHeaderNote, inputFooterNote].forEach(el => {
                 allFontClasses.forEach(cls => el.classList.remove(cls));
