@@ -2,8 +2,17 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长文章转图片工具 - 0309测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="排版大师">
+    <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat/pen.svg?width=192&height=192">
+    
+    <title>长文章转图片工具 - 0309测试v3</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
@@ -16,6 +25,16 @@
             margin: 0;
             color: #333;
         }
+
+        /* 核心修复：定义云端字体和系统字体的强力接管类 */
+        .font-hei, .font-hei * { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif !important; }
+        .font-song, .font-song * { font-family: "Songti SC", "STSongti-SC-Regular", "STSong", "SimSun", serif !important; }
+        /* 霞鹜文楷：极美的楷体/仿宋替代品 */
+        .font-wenkai, .font-wenkai * { font-family: "LXGW WenKai Screen", sans-serif !important; }
+        /* 站酷小薇：优雅的文艺字体替代品 */
+        .font-xiaowei, .font-xiaowei * { font-family: "ZCOOL XiaoWei", serif !important; }
+        .font-serif-mix, .font-serif-mix * { font-family: Georgia, "Times New Roman", "Songti SC", "STSongti-SC-Regular", serif !important; }
+
         .panel {
             flex: 1;
             min-width: 320px;
@@ -45,7 +64,7 @@
         input[type="number"] { width: 45px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
         input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
         input[type="color"] { cursor: pointer; width: 32px; height: 32px; border: none; border-radius: 4px; padding: 0; background: none; }
-        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; cursor: pointer; }
+        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
         
         .text-input {
             width: 100%;
@@ -133,7 +152,6 @@
             width: 400px; 
             max-width: 100%;
             
-            --font-family: system-ui, -apple-system, sans-serif;
             --title-font-size: 26px; 
             --font-size: 16px;      
             --p-spacing: 10px;   
@@ -145,7 +163,6 @@
             --bg-color: #ffffff;
             --text-color: #333333;
             
-            font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: var(--margin-y) var(--margin-x); 
@@ -254,7 +271,7 @@
 
     </style>
 </head>
-<body lang="en">
+<body lang="zh-CN">
 
     <div class="panel">
         <h2>1. 排版设置</h2>
@@ -262,12 +279,11 @@
             <div class="setting-item" style="width: 100%;">
                 <label for="fontFamily" style="font-weight: bold;">全文字体:</label>
                 <select id="fontFamily">
-                    <option value="system-ui, -apple-system, 'PingFang SC', sans-serif">现代黑体 (默认)</option>
-                    <option value="'Songti SC', 'STSong', 'SimSun', serif">经典宋体</option>
-                    <option value="'Kaiti SC', 'STKaiti', 'KaiTi', serif">传统楷体</option>
-                    <option value="'FangSong', 'STFangsong', 'FangSong_GB2312', serif">清雅仿宋</option>
-                    <option value="'Yuanti SC', 'YouYuan', sans-serif">柔和圆体</option>
-                    <option value="Georgia, 'Times New Roman', 'Songti SC', 'STSong', serif">文学衬线 (中英混排推荐)</option>
+                    <option value="hei">现代黑体 (系统默认)</option>
+                    <option value="song">经典宋体 (系统自带)</option>
+                    <option value="wenkai">霞鹜文楷 (☁️云端加载，全平台完美)</option>
+                    <option value="xiaowei">站酷小薇 (☁️云端加载，优雅文艺)</option>
+                    <option value="serif-mix">文学衬线 (中英混排推荐)</option>
                 </select>
             </div>
 
@@ -377,7 +393,7 @@
     <div class="panel" id="preview-panel">
         <h2>排版预览</h2>
         <div id="preview-container">
-            <div id="article-preview" class="preview-box">
+            <div id="article-preview" class="preview-box font-hei">
                 <div id="preview-header-section">
                     <img id="preview-header-img" class="header-img" style="display: none;">
                     <h1 id="preview-title" style="display: none;"></h1>
@@ -436,9 +452,18 @@
 
         document.execCommand('defaultParagraphSeparator', false, 'p');
 
-        fontFamilySelect.addEventListener('change', (e) => {
-            rootStyles.setProperty('--font-family', e.target.value);
-        });
+        function applyGlobalFont() {
+            const fontKey = fontFamilySelect.value;
+            const prefix = 'font-';
+            const allFontClasses = ['font-hei', 'font-song', 'font-wenkai', 'font-xiaowei', 'font-serif-mix'];
+            
+            [preview, textInput, inputTitle, inputSubtitle, inputAuthor, inputHeaderNote, inputFooterNote].forEach(el => {
+                allFontClasses.forEach(cls => el.classList.remove(cls));
+                el.classList.add(prefix + fontKey);
+            });
+        }
+
+        fontFamilySelect.addEventListener('change', applyGlobalFont);
 
         titleFontSizeInput.addEventListener('input', (e) => {
             rootStyles.setProperty('--title-font-size', e.target.value + 'px');
@@ -690,8 +715,8 @@
 
         function createPageContainer() {
             const page = document.createElement('div');
-            page.className = 'preview-box';
-            page.style.setProperty('--font-family', rootStyles.getPropertyValue('--font-family'));
+            page.className = `preview-box font-${fontFamilySelect.value}`;
+            
             page.style.setProperty('--title-font-size', rootStyles.getPropertyValue('--title-font-size'));
             page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
             page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
@@ -747,6 +772,7 @@
         }
 
         updateThemeColors('#ffffff', '#333333');
+        applyGlobalFont(); 
         syncPreview(); 
     </script>
 </body>
