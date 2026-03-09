@@ -262,9 +262,12 @@
             <div class="setting-item" style="width: 100%;">
                 <label for="fontFamily" style="font-weight: bold;">全文字体:</label>
                 <select id="fontFamily">
-                    <option value="system-ui, -apple-system, 'PingFang SC', sans-serif">系统黑体</option>
-                    <option value="'Songti SC', 'STSong', 'SimSun', serif">宋体</option>
-                    <option value="'Kaiti SC', 'STKaiti', 'KaiTi', serif">楷体</option>
+                    <option value="system-ui, -apple-system, 'PingFang SC', sans-serif">现代黑体 (默认)</option>
+                    <option value="'Songti SC', 'STSong', 'SimSun', serif">经典宋体</option>
+                    <option value="'Kaiti SC', 'STKaiti', 'KaiTi', serif">传统楷体</option>
+                    <option value="'FangSong', 'STFangsong', 'FangSong_GB2312', serif">清雅仿宋</option>
+                    <option value="'Yuanti SC', 'YouYuan', sans-serif">柔和圆体</option>
+                    <option value="Georgia, 'Times New Roman', 'Songti SC', 'STSong', serif">文学衬线 (中英混排推荐)</option>
                 </select>
             </div>
 
@@ -591,7 +594,6 @@
             if (previewHeaderNote.style.display !== 'none') elementsToProcess.push(previewHeaderNote);
             
             Array.from(contentSection.children).forEach(el => {
-                // 核心修复：不再过滤掉空白行（<p><br></p> 或全空格的段落），保留用户排版的呼吸感
                 elementsToProcess.push(el);
             });
 
