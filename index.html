@@ -2,12 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="排版大师">
-    <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat/pen.svg?width=192&height=192">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>长文章转图片工具 - 0309测试</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -21,15 +16,6 @@
             margin: 0;
             color: #333;
         }
-
-        /* 核心修复：使用 data 属性强制接管所有子元素的字体，绝不给 iOS Safari 降级的机会 */
-        [data-font="hei"], [data-font="hei"] * { font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif !important; }
-        [data-font="song"], [data-font="song"] * { font-family: "Songti SC", "STSong", "SimSun", serif !important; }
-        [data-font="kai"], [data-font="kai"] * { font-family: "Kaiti SC", "STKaiti", "KaiTi", serif !important; }
-        [data-font="fangsong"], [data-font="fangsong"] * { font-family: "FangSong", "STFangsong", "FangSong_GB2312", "Songti SC", serif !important; }
-        [data-font="yuan"], [data-font="yuan"] * { font-family: "Yuanti SC", "STYuanti", "YouYuan", sans-serif !important; }
-        [data-font="serif-mix"], [data-font="serif-mix"] * { font-family: Georgia, "Times New Roman", "Songti SC", "STSong", serif !important; }
-
         .panel {
             flex: 1;
             min-width: 320px;
@@ -59,7 +45,7 @@
         input[type="number"] { width: 45px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
         input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
         input[type="color"] { cursor: pointer; width: 32px; height: 32px; border: none; border-radius: 4px; padding: 0; background: none; }
-        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; cursor: pointer; }
         
         .text-input {
             width: 100%;
@@ -147,6 +133,7 @@
             width: 400px; 
             max-width: 100%;
             
+            --font-family: system-ui, -apple-system, sans-serif;
             --title-font-size: 26px; 
             --font-size: 16px;      
             --p-spacing: 10px;   
@@ -158,6 +145,7 @@
             --bg-color: #ffffff;
             --text-color: #333333;
             
+            font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: var(--margin-y) var(--margin-x); 
@@ -274,12 +262,12 @@
             <div class="setting-item" style="width: 100%;">
                 <label for="fontFamily" style="font-weight: bold;">全文字体:</label>
                 <select id="fontFamily">
-                    <option value="hei">现代黑体 (默认)</option>
-                    <option value="song">经典宋体</option>
-                    <option value="kai">传统楷体</option>
-                    <option value="yuan">柔和圆体</option>
-                    <option value="serif-mix">文学衬线 (中英混排推荐)</option>
-                    <option value="fangsong">清雅仿宋 (仅限电脑/部分安卓，iPhone会降级为宋体)</option>
+                    <option value="system-ui, -apple-system, 'PingFang SC', sans-serif">现代黑体 (默认)</option>
+                    <option value="'Songti SC', 'STSong', 'SimSun', serif">经典宋体</option>
+                    <option value="'Kaiti SC', 'STKaiti', 'KaiTi', serif">传统楷体</option>
+                    <option value="'FangSong', 'STFangsong', 'FangSong_GB2312', serif">清雅仿宋</option>
+                    <option value="'Yuanti SC', 'YouYuan', sans-serif">柔和圆体</option>
+                    <option value="Georgia, 'Times New Roman', 'Songti SC', 'STSong', serif">文学衬线 (中英混排推荐)</option>
                 </select>
             </div>
 
@@ -389,7 +377,7 @@
     <div class="panel" id="preview-panel">
         <h2>排版预览</h2>
         <div id="preview-container">
-            <div id="article-preview" class="preview-box" data-font="hei">
+            <div id="article-preview" class="preview-box">
                 <div id="preview-header-section">
                     <img id="preview-header-img" class="header-img" style="display: none;">
                     <h1 id="preview-title" style="display: none;"></h1>
@@ -448,19 +436,9 @@
 
         document.execCommand('defaultParagraphSeparator', false, 'p');
 
-        // 通过写入 data 属性，利用 CSS 选择器和 !important 实现彻底强制渲染
-        function applyGlobalFont() {
-            const fontKey = fontFamilySelect.value;
-            preview.setAttribute('data-font', fontKey);
-            textInput.setAttribute('data-font', fontKey);
-            inputTitle.setAttribute('data-font', fontKey);
-            inputSubtitle.setAttribute('data-font', fontKey);
-            inputAuthor.setAttribute('data-font', fontKey);
-            inputHeaderNote.setAttribute('data-font', fontKey);
-            inputFooterNote.setAttribute('data-font', fontKey);
-        }
-
-        fontFamilySelect.addEventListener('change', applyGlobalFont);
+        fontFamilySelect.addEventListener('change', (e) => {
+            rootStyles.setProperty('--font-family', e.target.value);
+        });
 
         titleFontSizeInput.addEventListener('input', (e) => {
             rootStyles.setProperty('--title-font-size', e.target.value + 'px');
@@ -713,10 +691,7 @@
         function createPageContainer() {
             const page = document.createElement('div');
             page.className = 'preview-box';
-            
-            // 生成分页容器时同样挂载 data 属性
-            page.setAttribute('data-font', fontFamilySelect.value);
-            
+            page.style.setProperty('--font-family', rootStyles.getPropertyValue('--font-family'));
             page.style.setProperty('--title-font-size', rootStyles.getPropertyValue('--title-font-size'));
             page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
             page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
@@ -772,7 +747,6 @@
         }
 
         updateThemeColors('#ffffff', '#333333');
-        applyGlobalFont(); 
         syncPreview(); 
     </script>
 </body>
