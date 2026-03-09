@@ -28,7 +28,7 @@
             color: #333;
         }
 
-        /* 核心修复：宋体也使用云端思源宋体，实现全平台统一 */
+        /* 核心修复：全平台云端字体强制接管 */
         .font-hei, .font-hei * { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif !important; }
         .font-song, .font-song * { font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif !important; }
         .font-wenkai, .font-wenkai * { font-family: "LXGW WenKai Screen", sans-serif !important; }
@@ -150,6 +150,8 @@
         .preview-box {
             width: 400px; 
             max-width: 100%;
+            position: relative; /* 为水印绝对定位做准备 */
+            overflow: hidden;   /* 确保水印不超出边缘 */
             
             --title-font-size: 26px; 
             --font-size: 16px;      
@@ -172,13 +174,37 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
+        /* 水印核心样式 */
+        .watermark-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; /* 穿透点击，不影响文字选择 */
+            z-index: 10;
+            display: none;
+        }
+        .watermark-pattern {
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            gap: 60px;
+            transform: rotate(-30deg);
+            opacity: 0.05; /* 极低的透明度，柔和不刺眼 */
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--text-color);
+            user-select: none;
+        }
+        
         .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
             text-align: left; 
             text-justify: inter-ideograph;
-            
             word-break: normal; 
             overflow-wrap: break-word; 
         }
@@ -204,7 +230,7 @@
 
         .preview-box h1 {
             font-size: var(--title-font-size);
-            font-weight: 800;
+            font-weight: bold; /* 适配所有字体的粗体兼容性 */
             line-height: 1.4;
             margin-bottom: 8px;
             color: var(--text-color);
@@ -346,6 +372,14 @@
                 <label for="textColor" style="font-size: 13px; margin-left: 10px;">文字颜色:</label>
                 <input type="color" id="textColor" value="#333333" title="更改文字颜色">
             </div>
+
+            <div class="setting-item" style="width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 15px; margin-top: 5px;">
+                <label style="font-weight: bold; margin-right: 10px; color: #475569;">版权水印:</label>
+                <input type="text" id="watermarkText" class="text-input" style="flex: 1; min-width: 150px; max-width: 200px;" placeholder="输入防盗水印文本...">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; color: #4338ca;">
+                    <input type="checkbox" id="watermarkEnable"> 铺满防盗
+                </label>
+            </div>
         </div>
 
         <h2>2. 文章头部 (选填)</h2>
@@ -392,6 +426,10 @@
         <h2>排版预览</h2>
         <div id="preview-container">
             <div id="article-preview" class="preview-box font-hei">
+                <div id="watermark-layer" class="watermark-overlay">
+                    <div id="watermark-pattern" class="watermark-pattern"></div>
+                </div>
+
                 <div id="preview-header-section">
                     <img id="preview-header-img" class="header-img" style="display: none;">
                     <h1 id="preview-title" style="display: none;"></h1>
@@ -463,6 +501,29 @@
 
         fontFamilySelect.addEventListener('change', applyGlobalFont);
 
+        // 水印逻辑
+        function updateWatermark() {
+            const layer = document.getElementById('watermark-layer');
+            const pattern = document.getElementById('watermark-pattern');
+            const enable = document.getElementById('watermarkEnable').checked;
+            const text = document.getElementById('watermarkText').value.trim();
+            
+            if (enable && text) {
+                layer.style.display = 'block';
+                pattern.innerHTML = '';
+                // 循环生成足够多数量的文字节点铺满背景
+                for(let i=0; i<80; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = text;
+                    pattern.appendChild(span);
+                }
+            } else {
+                layer.style.display = 'none';
+            }
+        }
+        document.getElementById('watermarkEnable').addEventListener('change', updateWatermark);
+        document.getElementById('watermarkText').addEventListener('input', updateWatermark);
+
         titleFontSizeInput.addEventListener('input', (e) => {
             rootStyles.setProperty('--title-font-size', e.target.value + 'px');
             titleFontSizeVal.textContent = e.target.value + 'px';
@@ -501,16 +562,26 @@
             }
         }
 
+        // 核心修复：确保移动端在进行文本同步时，display: block 带有 !important，彻底打破 iOS 的渲染卡死
         const bindTextSync = (inputEl, previewEl) => {
-            inputEl.addEventListener('input', () => {
+            const sync = () => {
                 if (inputEl.tagName === 'TEXTAREA') {
                     previewEl.innerHTML = inputEl.value.split(/\r?\n/).map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
                 } else {
                     previewEl.innerHTML = inputEl.value;
                 }
-                previewEl.style.display = inputEl.value.trim() ? 'block' : 'none';
-                if(inputEl !== inputFooterNote) updateHeaderSpacing();
-            });
+                
+                if (inputEl.value.trim()) {
+                    previewEl.style.setProperty('display', 'block', 'important');
+                } else {
+                    previewEl.style.setProperty('display', 'none', 'important');
+                }
+                
+                if (inputEl !== inputFooterNote) updateHeaderSpacing();
+            };
+            
+            inputEl.addEventListener('input', sync);
+            sync(); // 初始化时强制执行一次自检
         };
 
         bindTextSync(inputTitle, previewTitle);
@@ -725,6 +796,25 @@
             page.style.setProperty('--margin-y', rootStyles.getPropertyValue('--margin-y'));
             page.style.setProperty('--bg-color', rootStyles.getPropertyValue('--bg-color'));
             page.style.setProperty('--text-color', rootStyles.getPropertyValue('--text-color'));
+            
+            // 确保多图切分时，水印依然完美跟随
+            const wmEnable = document.getElementById('watermarkEnable').checked;
+            const wmText = document.getElementById('watermarkText').value.trim();
+            if (wmEnable && wmText) {
+                const layer = document.createElement('div');
+                layer.className = 'watermark-overlay';
+                layer.style.display = 'block';
+                const pattern = document.createElement('div');
+                pattern.className = 'watermark-pattern';
+                for(let i=0; i<80; i++) {
+                    const span = document.createElement('span');
+                    span.textContent = wmText;
+                    pattern.appendChild(span);
+                }
+                layer.appendChild(pattern);
+                page.appendChild(layer);
+            }
+            
             return page;
         }
 
