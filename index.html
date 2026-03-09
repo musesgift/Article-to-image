@@ -2,7 +2,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="排版大师">
+    <link rel="apple-touch-icon" href="https://api.iconify.design/fluent-emoji-flat/pen.svg?width=192&height=192">
+    
     <title>长文章转图片工具</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -45,7 +50,7 @@
         input[type="number"] { width: 45px; padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
         input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; margin: 0; }
         input[type="color"] { cursor: pointer; width: 32px; height: 32px; border: none; border-radius: 4px; padding: 0; background: none; }
-        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit; cursor: pointer; }
+        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
         
         .text-input {
             width: 100%;
@@ -133,7 +138,6 @@
             width: 400px; 
             max-width: 100%;
             
-            --font-family: system-ui, -apple-system, sans-serif;
             --title-font-size: 26px; 
             --font-size: 16px;      
             --p-spacing: 10px;   
@@ -145,7 +149,6 @@
             --bg-color: #ffffff;
             --text-color: #333333;
             
-            font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: var(--margin-y) var(--margin-x); 
@@ -436,9 +439,21 @@
 
         document.execCommand('defaultParagraphSeparator', false, 'p');
 
-        fontFamilySelect.addEventListener('change', (e) => {
-            rootStyles.setProperty('--font-family', e.target.value);
-        });
+        // 核心修复：直接暴力写入 DOM 样式，让输入框和预览区同时生效，彻底抛弃 CSS 变量
+        function applyGlobalFont() {
+            const font = fontFamilySelect.value;
+            preview.style.fontFamily = font;
+            textInput.style.fontFamily = font;
+            
+            // 确保头部输入框的字体也统一
+            inputTitle.style.fontFamily = font;
+            inputSubtitle.style.fontFamily = font;
+            inputAuthor.style.fontFamily = font;
+            inputHeaderNote.style.fontFamily = font;
+            inputFooterNote.style.fontFamily = font;
+        }
+
+        fontFamilySelect.addEventListener('change', applyGlobalFont);
 
         titleFontSizeInput.addEventListener('input', (e) => {
             rootStyles.setProperty('--title-font-size', e.target.value + 'px');
@@ -691,7 +706,10 @@
         function createPageContainer() {
             const page = document.createElement('div');
             page.className = 'preview-box';
-            page.style.setProperty('--font-family', rootStyles.getPropertyValue('--font-family'));
+            
+            // 核心修复：直接从下拉菜单读取字体强力注入，不依赖 CSS 变量
+            page.style.fontFamily = fontFamilySelect.value;
+            
             page.style.setProperty('--title-font-size', rootStyles.getPropertyValue('--title-font-size'));
             page.style.setProperty('--font-size', rootStyles.getPropertyValue('--font-size'));
             page.style.setProperty('--p-spacing', rootStyles.getPropertyValue('--p-spacing'));
@@ -746,7 +764,9 @@
             resultContainer.scrollIntoView({ behavior: 'smooth' });
         }
 
+        // 初始化执行
         updateThemeColors('#ffffff', '#333333');
+        applyGlobalFont(); // 页面加载时立刻同步默认字体
         syncPreview(); 
     </script>
 </body>
