@@ -11,6 +11,9 @@
     <title>长文章转图片工具</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -25,12 +28,11 @@
             color: #333;
         }
 
-        /* 核心修复：定义云端字体和系统字体的强力接管类 */
+        /* 核心修复：宋体也使用云端思源宋体，实现全平台统一 */
         .font-hei, .font-hei * { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif !important; }
-        .font-song, .font-song * { font-family: "Songti SC", "STSongti-SC-Regular", "STSong", "SimSun", serif !important; }
-        /* 霞鹜文楷：极美的楷体/仿宋替代品 */
+        .font-song, .font-song * { font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif !important; }
         .font-wenkai, .font-wenkai * { font-family: "LXGW WenKai Screen", sans-serif !important; }
-        .font-serif-mix, .font-serif-mix * { font-family: Georgia, "Times New Roman", "Songti SC", "STSongti-SC-Regular", serif !important; }
+        .font-serif-mix, .font-serif-mix * { font-family: Georgia, "Times New Roman", "Noto Serif SC", serif !important; }
 
         .panel {
             flex: 1;
@@ -276,9 +278,9 @@
             <div class="setting-item" style="width: 100%;">
                 <label for="fontFamily" style="font-weight: bold;">全文字体:</label>
                 <select id="fontFamily">
-                    <option value="hei">现代黑体 (系统默认)</option>
-                    <option value="song">经典宋体 (系统自带)</option>
-                    <option value="wenkai">霞鹜文楷 (☁️云端加载，全平台完美)</option>
+                    <option value="hei">现代黑体</option>
+                    <option value="song">思源宋体</option>
+                    <option value="wenkai">霞鹜文楷</option>
                     <option value="serif-mix">文学衬线 (中英混排推荐)</option>
                 </select>
             </div>
