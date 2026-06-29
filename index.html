@@ -199,21 +199,22 @@
             user-select: none;
         }
         
-         .preview-box p, .preview-box div {
+            /* 1. 全局正文基础设置：恢复标点避头尾禁则 */
+        .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
             
-            /* 1. 强制两端对齐，但彻底修复“间距被拉大”：指定段落最后一行（或短行）必须保持左对齐，绝不拉伸 */
+            /* 恢复正常的断行逻辑，让系统自己处理标点符号位置 */
+            word-break: normal !important; 
+            overflow-wrap: break-word !important;
+            line-break: strict !important; /* 开启最严格的中文标点避头尾规则 */
+        }
+
+        /* 2. 精准定位：仅对“正文区域”下猛药，保护标题、题注不被误伤 */
+        #preview-content-section p, #preview-content-section div {
             text-align: justify !important;
-            text-align-last: left !important;
-            
-            /* 2. 彻底修复“按词组断开”：使用现代 CSS 标准，强制系统在【单个字符】之间均匀分配空白 */
-            text-justify: inter-character !important;
-            
-            /* 3. 终极断行控制：打破 iOS 的语义词组粘连，允许在任意汉字和标点之间平滑换行 */
-            word-break: break-all !important; 
-            line-break: anywhere !important; 
+            text-align-last: left !important; /* 解决段落末行字间距被强行拉扯的问题 */
         }
 
 
