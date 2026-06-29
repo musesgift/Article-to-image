@@ -199,18 +199,21 @@
             user-select: none;
         }
         
-        .preview-box p, .preview-box div {
+         .preview-box p, .preview-box div {
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
             
-            /* 1. 强制两端对齐 */
-            text-align: justify !important; 
-            text-justify: inter-ideograph; 
+            /* 1. 强制两端对齐，但彻底修复“间距被拉大”：指定段落最后一行（或短行）必须保持左对齐，绝不拉伸 */
+            text-align: justify !important;
+            text-align-last: left !important;
             
-            /* 2. 终极修复：强制打散所有词组，让系统在单个汉字级别进行均匀间距拉伸 */
+            /* 2. 彻底修复“按词组断开”：使用现代 CSS 标准，强制系统在【单个字符】之间均匀分配空白 */
+            text-justify: inter-character !important;
+            
+            /* 3. 终极断行控制：打破 iOS 的语义词组粘连，允许在任意汉字和标点之间平滑换行 */
             word-break: break-all !important; 
-            overflow-wrap: break-word; 
+            line-break: anywhere !important; 
         }
 
 
