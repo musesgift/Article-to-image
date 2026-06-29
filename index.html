@@ -203,11 +203,16 @@
             margin: 0 0 var(--p-spacing) 0;
             text-indent: var(--p-indent);
             line-height: 1.8;
-            text-align: left; 
-            text-justify: inter-ideograph;
-            word-break: normal; 
+            
+            /* 1. 强制两端对齐 */
+            text-align: justify !important; 
+            text-justify: inter-ideograph; 
+            
+            /* 2. 终极修复：强制打散所有词组，让系统在单个汉字级别进行均匀间距拉伸 */
+            word-break: break-all !important; 
             overflow-wrap: break-word; 
         }
+
 
         .preview-box [style*="text-align: center"],
         .preview-box [style*="text-align: right"],
